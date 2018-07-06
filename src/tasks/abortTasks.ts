@@ -10,9 +10,10 @@ const debug = createDebug('pecorino:*');
 const SCHEDULE_RATE_IN_MILLISECONDS = 60000;
 const INTERVAL_MILLISECONDS = 500;
 const MAX_NUBMER_OF_TASKS = Math.floor(SCHEDULE_RATE_IN_MILLISECONDS / INTERVAL_MILLISECONDS);
+const RETRY_INTERVAL_MINUTES = 10;
 
 /**
- * Money転送タスク
+ * タスク処理中断
  */
 export default async (event: any, context: Context) => {
     return new Promise(async (resolve, reject) => {
@@ -39,9 +40,7 @@ export default async (event: any, context: Context) => {
 
                     countStarted += 1;
                     try {
-                        await pecorino.service.task.executeByName(
-                            pecorino.factory.taskName.MoneyTransfer
-                        )({ taskRepo: taskRepo, connection: pecorino.mongoose.connection });
+                        await pecorino.service.task.abort(RETRY_INTERVAL_MINUTES)({ task: taskRepo });
                     } catch (error) {
                         console.error(error);
                     }

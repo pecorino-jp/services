@@ -12,7 +12,7 @@ const INTERVAL_MILLISECONDS = 500;
 const MAX_NUBMER_OF_TASKS = Math.floor(SCHEDULE_RATE_IN_MILLISECONDS / INTERVAL_MILLISECONDS);
 
 /**
- * Money転送タスク
+ * Money転送中止
  */
 export default async (event: any, context: Context) => {
     return new Promise(async (resolve, reject) => {
@@ -40,7 +40,7 @@ export default async (event: any, context: Context) => {
                     countStarted += 1;
                     try {
                         await pecorino.service.task.executeByName(
-                            pecorino.factory.taskName.MoneyTransfer
+                            pecorino.factory.taskName.CancelMoneyTransfer
                         )({ taskRepo: taskRepo, connection: pecorino.mongoose.connection });
                     } catch (error) {
                         console.error(error);
