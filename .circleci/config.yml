@@ -22,9 +22,8 @@ jobs:
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Install Serverless CLI and dependencies
+          name: Install dependencies
           command: |
-            sudo npm i -g serverless
             npm install
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
