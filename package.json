@@ -2,6 +2,7 @@
   "name": "pecorino",
   "version": "1.0.0",
   "description": "",
+  "private": true,
   "main": "dst/handler.js",
   "scripts": {
     "build": "tsc",
@@ -14,7 +15,15 @@
     "version": "git add -A",
     "postversion": "git push origin --tags"
   },
-  "author": "",
+  "author": {
+    "name": "Motionpicture co.,ltd."
+  },
+  "contributors": [
+    {
+      "name": "Tetsu Yamazaki",
+      "email": "yamazaki@motionpicture.jp"
+    }
+  ],
   "license": "UNLICENSED",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.7",
