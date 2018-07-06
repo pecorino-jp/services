@@ -6,13 +6,14 @@ import * as pecorino from '@motionpicture/pecorino-domain';
 
 // const debug = createDebug('pecorino-api:*');
 const PING_INTERVAL = 10000;
-const connectOptions = {
+const connectOptions: pecorino.mongoose.ConnectionOptions = {
     autoReconnect: true,
     keepAlive: 120000,
     connectTimeoutMS: 30000,
     socketTimeoutMS: 0,
     reconnectTries: 30,
-    reconnectInterval: 1000
+    reconnectInterval: 1000,
+    useNewUrlParser: true
 };
 
 export async function connectMongo() {
@@ -34,7 +35,6 @@ export async function connectMongo() {
                 let pingResult: any;
                 try {
                     pingResult = await pecorino.mongoose.connection.db.admin().ping();
-                    // debug('pingResult:', pingResult);
                 } catch (error) {
                     console.error('ping:', error);
                 }
@@ -48,7 +48,6 @@ export async function connectMongo() {
             // コネクション確立
             try {
                 await pecorino.mongoose.connect(<string>process.env.MONGOLAB_URI, connectOptions);
-                // debug('MongoDB connected!');
             } catch (error) {
                 console.error('mongoose.connect:', error);
             }

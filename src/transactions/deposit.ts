@@ -27,7 +27,7 @@ export async function start(event: any, context: Context) {
             typeOf: pecorino.factory.transactionType.Deposit,
             agent: {
                 typeOf: body.agent.typeOf,
-                id: (body.agent.id !== undefined) ? body.agent.id : context.awsRequestId,
+                id: (body.agent.id !== undefined) ? body.agent.id : event.requestContext.authorizer.principalId,
                 name: body.agent.name,
                 url: body.agent.url
             },
