@@ -56,6 +56,239 @@ provider:
 #    - exclude-me.js
 #    - exclude-me-dir/**
 
+custom:
+  adminUserAuth:
+    name: authorizerFunc
+    resultTtlInSeconds: 0
+    identitySource: method.request.header.Authorization
+    # identityValidationExpression: someRegex
+    type: token
+
+  # You must have the documentation object
+  documentation:
+    # this is general info about the API
+    api:
+      info:
+        version: '1.0.0'
+        title: 口座サービス Pecorino
+        description: Pecorino口座サービスが提供するAPIは、口座管理を行うアプリケーションに有用なインターフェースを提供します。
+        termsOfService: https://motionpicture.jp/
+        contact:
+          # name: The contact person
+          # url: https://www.serverless.com/framework
+          email: yamazaki@motionpicture.jp
+        license:
+          name: Apache 2.0
+          url: http://www.apache.org/licenses/LICENSE-2.0.html
+        tags:
+        - name: 口座管理サービス
+          description: "口座を管理するエンドポイントです。"
+        - name: 入金取引サービス
+          description: "入金取引を管理するエンドポイントです。"
+        - name: 出金取引サービス
+          description: "出金取引を管理するエンドポイントです。"
+        - name: 転送取引サービス
+          description: "転送取引を管理するエンドポイントです。"
+    # Now we describe all the models that we use
+    models:
+      -
+        name: MessageResponse
+        contentType: "application/json"
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+      -
+        name: DoSomethingRequest
+        contentType: application/json
+        schema:
+          type: array
+          items:
+            type: string
+      -
+        name: DoSomethingResponse
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: 400JsonResponse
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+            code:
+              type: number
+      -
+        name: Account
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            accountNumber:
+              type: string
+              description: 口座番号
+            name:
+              type: string
+              description: 口座名義
+            balance:
+              type: integer
+              description: 残高
+            availableBalance:
+              type: integer
+              description: 利用可能残高
+          description: 口座
+      -
+        name: AccountList
+        contentType: "application/json"
+        schema:
+          type: array
+          items:
+            $ref: "{{model: Account}}"
+      -
+        name: OpenAccountParams
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            accountNumber:
+              type: string
+              description: 口座番号
+            name:
+              type: string
+              description: 口座名義
+
+      -
+        name: TransactionStatus
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: TransactionAgent
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: TransactionRecipient
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: StartDepositTransactionParams
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: StartWithdrawTransactionParams
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: StartTransferTransactionParams
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: DepositTransaction
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: WithdrawTransaction
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: TransferTransaction
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: MoneyTransferAction
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: MoneyTransferActionList
+        contentType: application/json
+        schema:
+          type: array
+          items:
+            $ref: "{{model: MoneyTransferAction}}"
+      -
+        name: MoneyTransferActionFromLocation
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+      -
+        name: MoneyTransferActionToLocation
+        contentType: application/json
+        schema:
+          type: object
+          properties:
+            typeOf:
+              type: string
+
+  commonModelSchemaFragments:
+    # defining common fragments means you can reference them with a single line
+    MethodResponse400Json:
+      statusCode: 400
+      responseModels:
+        "application/json": 400JsonResponse
+
+# you can add CloudFormation resource templates here
+# resources:
+#   Resources:
+#    NewResource:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: my-new-bucket
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
+
+plugins:
+  - serverless-aws-documentation
+
 functions:
   hello:
     handler: dst/handler.hello
@@ -63,7 +296,14 @@ functions:
       - http:
           path: ""
           method: get
-
+          documentation:
+            summary: hello
+            description: hello
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": DoSomethingResponse
   searchAccounts:
     handler: dst/accounts.search
     events:
@@ -78,7 +318,16 @@ functions:
                 statuses: false
                 name: false
                 limit: true
-
+          documentation:
+            summary: 口座検索
+            description: 口座検索
+            tags:
+              - 口座管理サービス
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": AccountList
   openAccount:
     handler: dst/accounts.open
     events:
@@ -87,22 +336,20 @@ functions:
           method: post
           authorizer: ${self:custom.adminUserAuth}
           documentation:
-            summary: "Create something"
-            description: "Creates the thing you need"
+            summary: 口座開設
+            description: 口座開設
             tags:
-              - "Data Creation"
-              - "Some other tag"
+              - 口座管理サービス
             requestBody:
-              description: "Request body description"
+              description: 口座番号と口座名義を指定します。Pecorinoサービス内(ひとつのPecorinoAPIエンドポイント)でユニークとなるように指定側で管理すること。 重複すればステータスコード409が返されます。
             requestModels:
-               "application/json": DoSomethingRequest
+               "application/json": OpenAccountParams
             methodResponses:
               -
-                statusCode: '200'
+                statusCode: 201
                 responseModels:
-                  "application/json": DoSomethingResponse
-              - ${self:custom.commonModelSchemaFragments.MethodResponse400Json}
-
+                  "application/json": Account
+              # - ${self:custom.commonModelSchemaFragments.MethodResponse400Json}
   closeAccount:
     handler: dst/accounts.close
     events:
@@ -114,7 +361,14 @@ functions:
             parameters:
               paths:
                 accountNumber: true
-
+          documentation:
+            summary: 口座解約
+            description: 口座解約
+            tags:
+              - 口座管理サービス
+            methodResponses:
+              -
+                statusCode: 204
   searchAccountMoneyTransferActions:
     handler: dst/accounts.searchMoneyTransferActions
     events:
@@ -126,7 +380,16 @@ functions:
             parameters:
               paths:
                 accountNumber: true
-
+          documentation:
+            summary: 口座取引履歴検索
+            description: 口座取引履歴検索
+            tags:
+              - 口座管理サービス
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": MoneyTransferActionList
   searchActions:
     handler: dst/actions.search
     events:
@@ -134,7 +397,20 @@ functions:
           path: actions
           method: get
           authorizer: ${self:custom.adminUserAuth}
-
+          documentation:
+            summary: ""
+            description: ""
+            # tags:
+            #   - 口座管理サービス
+            # requestBody:
+            #   description: ""
+            # requestModels:
+            #    "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": DoSomethingResponse
   startDepositTransaction:
     handler: dst/transactions/deposit.start
     events:
@@ -142,7 +418,20 @@ functions:
           path: transactions/deposit/start
           method: post
           authorizer: ${self:custom.adminUserAuth}
-
+          documentation:
+            summary: 入金取引開始
+            description: 取引を開始します。取引の期限が切れると取引を確定することはできなくなります。 アプリケーション側で十分な期間を想定し、期限をセットしてください。
+            tags:
+              - 入金取引サービス
+            # requestBody:
+            #   description: ""
+            # requestModels:
+            #    "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": DepositTransaction
   confirmDepositTransaction:
     handler: dst/transactions/deposit.confirm
     events:
@@ -154,7 +443,18 @@ functions:
             parameters:
               paths:
                 transactionId: true
-
+          documentation:
+            summary: 入金取引確定
+            description: 取引を確定します。有効期限を超過していた場合、ステータスコード400を返却します。
+            tags:
+              - 入金取引サービス
+            # requestBody:
+            #   description: ""
+            # requestModels:
+            #    "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 204
   cancelDepositTransaction:
     handler: dst/transactions/deposit.cancel
     events:
@@ -166,7 +466,18 @@ functions:
             parameters:
               paths:
                 transactionId: true
-
+          documentation:
+            summary: 入金取引中止
+            description: 取引を中止します。すでに確定済の場合、ステータスコード400を返却します。
+            tags:
+              - 入金取引サービス
+            # requestBody:
+            #   description: ""
+            # requestModels:
+            #    "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 204
   startTransferTransaction:
     handler: dst/transactions/transfer.start
     events:
@@ -174,7 +485,20 @@ functions:
           path: transactions/transfer/start
           method: post
           authorizer: ${self:custom.adminUserAuth}
-
+          documentation:
+            summary: 転送取引開始
+            description: 取引を開始します。取引の期限が切れると取引を確定することはできなくなります。 アプリケーション側で十分な期間を想定し、期限をセットしてください。
+            tags:
+              - 転送取引サービス
+            # requestBody:
+            #   description: ""
+            # requestModels:
+            #    "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": TransferTransaction
   confirmTransferTransaction:
     handler: dst/transactions/transfer.confirm
     events:
@@ -186,7 +510,18 @@ functions:
             parameters:
               paths:
                 transactionId: true
-
+          documentation:
+            summary: 転送取引確定
+            description: 取引を確定します。有効期限を超過していた場合、ステータスコード400を返却します。
+            tags:
+              - 転送取引サービス
+            # requestBody:
+            #   description: ""
+            # requestModels:
+            #    "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 204
   cancelTransferTransaction:
     handler: dst/transactions/transfer.cancel
     events:
@@ -198,7 +533,18 @@ functions:
             parameters:
               paths:
                 transactionId: true
-
+          documentation:
+            summary: 転送取引中止
+            description: 取引を中止します。すでに確定済の場合、ステータスコード400を返却します。
+            tags:
+              - 転送取引サービス
+            # requestBody:
+            #   description: ""
+            # requestModels:
+            #    "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 204
   startWithdrawTransaction:
     handler: dst/transactions/withdraw.start
     events:
@@ -206,7 +552,20 @@ functions:
           path: transactions/withdraw/start
           method: post
           authorizer: ${self:custom.adminUserAuth}
-
+          documentation:
+            summary: 出金取引開始
+            description: 取引を開始します。取引の期限が切れると取引を確定することはできなくなります。 アプリケーション側で十分な期間を想定し、期限をセットしてください。
+            tags:
+              - 出金取引サービス
+            # requestBody:
+            #   description: ""
+            # requestModels:
+            #    "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": WithdrawTransaction
   confirmWithdrawTransaction:
     handler: dst/transactions/withdraw.confirm
     events:
@@ -218,7 +577,20 @@ functions:
             parameters:
               paths:
                 transactionId: true
-
+          documentation:
+            summary: 出金取引確定
+            description: 取引を確定します。有効期限を超過していた場合、ステータスコード400を返却します。
+            tags:
+              - 出金取引サービス
+            # requestBody:
+            #   description: ""
+            # requestModels:
+            #    "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 204
+                responseModels:
+                  "application/json": DoSomethingResponse
   cancelWithdrawTransaction:
     handler: dst/transactions/withdraw.cancel
     events:
@@ -230,99 +602,113 @@ functions:
             parameters:
               paths:
                 transactionId: true
+          documentation:
+            summary: 出金取引中止
+            description: 取引を中止します。すでに確定済の場合、ステータスコード400を返却します。
+            tags:
+              - 出金取引サービス
+            # requestBody:
+            #   description: ""
+            # requestModels:
+            #    "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 204
+                responseModels:
+                  "application/json": DoSomethingResponse
 
   authorizerFunc:
     handler: dst/authorizer.handler
 
-  abortTasks:
-    handler: dst/tasks/abortTasks.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # abortTasks:
+  #   handler: dst/tasks/abortTasks.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  cancelMoneyTransfer:
-    handler: dst/tasks/cancelMoneyTransfer.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # cancelMoneyTransfer:
+  #   handler: dst/tasks/cancelMoneyTransfer.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  makeTransactionExpired:
-    handler: dst/tasks/makeTransactionExpired.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # makeTransactionExpired:
+  #   handler: dst/tasks/makeTransactionExpired.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  moneyTransfer:
-    handler: dst/tasks/moneyTransfer.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # moneyTransfer:
+  #   handler: dst/tasks/moneyTransfer.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  onCanceledDepositTransaction:
-    handler: dst/tasks/onCanceledDepositTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # onCanceledDepositTransaction:
+  #   handler: dst/tasks/onCanceledDepositTransaction.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  onCanceledTransferTransaction:
-    handler: dst/tasks/onCanceledTransferTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # onCanceledTransferTransaction:
+  #   handler: dst/tasks/onCanceledTransferTransaction.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  onCanceledWithdrawTransaction:
-    handler: dst/tasks/onCanceledWithdrawTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # onCanceledWithdrawTransaction:
+  #   handler: dst/tasks/onCanceledWithdrawTransaction.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  onConfirmedDepositTransaction:
-    handler: dst/tasks/onConfirmedDepositTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # onConfirmedDepositTransaction:
+  #   handler: dst/tasks/onConfirmedDepositTransaction.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  onConfirmedTransferTransaction:
-    handler: dst/tasks/onConfirmedTransferTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # onConfirmedTransferTransaction:
+  #   handler: dst/tasks/onConfirmedTransferTransaction.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  onConfirmedWithdrawTransaction:
-    handler: dst/tasks/onConfirmedWithdrawTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # onConfirmedWithdrawTransaction:
+  #   handler: dst/tasks/onConfirmedWithdrawTransaction.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  onExpiredDepositTransaction:
-    handler: dst/tasks/onExpiredDepositTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # onExpiredDepositTransaction:
+  #   handler: dst/tasks/onExpiredDepositTransaction.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  onExpiredTransferTransaction:
-    handler: dst/tasks/onExpiredTransferTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # onExpiredTransferTransaction:
+  #   handler: dst/tasks/onExpiredTransferTransaction.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  onExpiredWithdrawTransaction:
-    handler: dst/tasks/onExpiredWithdrawTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # onExpiredWithdrawTransaction:
+  #   handler: dst/tasks/onExpiredWithdrawTransaction.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  reexportTransactionTasks:
-    handler: dst/tasks/reexportTransactionTasks.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # reexportTransactionTasks:
+  #   handler: dst/tasks/reexportTransactionTasks.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
-  retryTasks:
-    handler: dst/tasks/retryTasks.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
+  # retryTasks:
+  #   handler: dst/tasks/retryTasks.default
+  #   timeout: 300
+  #   events:
+  #     - schedule: rate(1 minute)
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
@@ -356,93 +742,3 @@ functions:
 #    Define function environment variables here
 #    environment:
 #      variable2: value2
-
-custom:
-  adminUserAuth:
-    name: authorizerFunc
-    resultTtlInSeconds: 0
-    identitySource: method.request.header.Authorization
-    # identityValidationExpression: someRegex
-    type: token
-
-  # You must have the documentation object
-  documentation:
-    # this is general info about the API
-    api:
-      info:
-        version: '1.0.0'
-        title: Example API
-        description: Some example API
-        termsOfService: https://www.google.com
-        # contact:
-        #   name: The contact person
-        #   url: https://www.serverless.com/framework
-        #   email: some-fake@email.com
-        # license:
-        #   name: The license
-        #   url: https://www.github.com
-      tags:
-        -
-          name: Tag1
-          description: The first tag
-        -
-          name: Tag2
-          description: That other tag that we all love
-    # Now we describe all the models that we use
-    models:
-      -
-        name: MessageResponse
-        contentType: "application/json"
-        schema:
-          type: object
-          properties:
-            message:
-              type: string
-      -
-        name: DoSomethingRequest
-        contentType: "application/json"
-        schema:
-          type: array
-          items:
-            type: string
-      -
-        name: DoSomethingResponse
-        contentType: "application/json"
-        schema:
-          type: object
-          properties:
-            result:
-              type: string
-            submittedItems:
-              type: number
-      -
-        name: 400JsonResponse
-        contentType: "application/json"
-        schema:
-          type: object
-          properties:
-            message:
-              type: string
-            statusCode:
-              type: number
-  commonModelSchemaFragments:
-    # defining common fragments means you can reference them with a single line
-    MethodResponse400Json:
-      statusCode: '400'
-      responseModels:
-        "application/json": 400JsonResponse
-
-# you can add CloudFormation resource templates here
-# resources:
-#   Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
-
-plugins:
-  - serverless-aws-documentation
