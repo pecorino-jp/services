@@ -93,7 +93,7 @@ custom:
     models:
       -
         name: MessageResponse
-        contentType: "application/json"
+        contentType: application/json
         schema:
           type: object
           properties:
@@ -145,7 +145,7 @@ custom:
           description: 口座
       -
         name: AccountList
-        contentType: "application/json"
+        contentType: application/json
         schema:
           type: array
           items:
@@ -162,39 +162,89 @@ custom:
             name:
               type: string
               description: 口座名義
-
+      -
+        name: TransactionType
+        description: 取引タイプ
+        contentType: application/json
+        schema:
+          type: string
+          enum:
+          - Deposit
+          - Transfer
+          - Withdraw
       -
         name: TransactionStatus
+        description: 取引ステータス
         contentType: application/json
         schema:
-          type: object
-          properties:
-            typeOf:
-              type: string
+          type: string
+          enum:
+          - InProgress
+          - Canceled
+          - Confirmed
+          - Expired
       -
         name: TransactionAgent
+        description: 取引進行人
         contentType: application/json
         schema:
           type: object
           properties:
             typeOf:
               type: string
+              description: 進行人タイプ
+            id:
+              type: string
+              description: 進行人ID
+            name:
+              type: string
+              description: 進行人名
+            url:
+              type: string
+              description: 進行人URL
       -
         name: TransactionRecipient
+        description: 取引受取人
         contentType: application/json
         schema:
           type: object
           properties:
             typeOf:
               type: string
+              description: 受取人タイプ
+            id:
+              type: string
+              description: 受取人ID
+            name:
+              type: string
+              description: 受取人名
+            url:
+              type: string
+              description: 受取人URL
       -
         name: StartDepositTransactionParams
+        description: 入金取引開始パラメーター
         contentType: application/json
         schema:
           type: object
           properties:
-            typeOf:
+            toAccountNumber:
               type: string
+              description: 入金先口座番号
+            expires:
+              type: string
+              format: date-time
+              description: 取引期限
+            agent:
+              $ref: "{{model: TransactionAgent}}"
+            recipient:
+              $ref: "{{model: TransactionRecipient}}"
+            amount:
+              type: integer
+              description: 金額
+            notes:
+              type: string
+              description: 取引説明
       -
         name: StartWithdrawTransactionParams
         contentType: application/json
@@ -212,23 +262,158 @@ custom:
             typeOf:
               type: string
       -
-        name: DepositTransaction
+        name: TransactionAttributes
         contentType: application/json
+        description: 取引共通属性
         schema:
           type: object
           properties:
-            typeOf:
+            id:
               type: string
+              description: 取引ID
+            typeOf:
+              $ref: "{{model: TransactionType}}"
+            status:
+              $ref: "{{model: TransactionStatus}}"
+            startDate:
+              type: string
+              format: date-time
+              description: 開始日時
+            endDate:
+              type: string
+              format: date-time
+              description: 終了日時
+            expires:
+              type: string
+              format: date-time
+              description: 確定期限
+            agent:
+              $ref: "{{model: TransactionAgent}}"
+            recipient:
+              $ref: "{{model: TransactionRecipient}}"
+      -
+        name: ClientUser
+        contentType: application/json
+        description: 取引進行クライアントユーザー
+        schema:
+          type: object
+          additionalProperties: true
+        # sub: string;
+        # token_use: string;
+        # scope: string;
+        # scopes: string[];
+        # iss: string;
+        # exp: number;
+        # iat: number;
+        # version: number;
+        # jti: string;
+        # client_id: string;
+        # username?: string;
+      -
+        name: DepositTransactionObject
+        contentType: application/json
+        description: 入金取引対象
+        schema:
+          type: object
+          properties:
+            clientUser:
+              $ref: "{{model: ClientUser}}"
+            amount:
+              type: integer
+              description: 金額
+            toAccountNumber:
+              type: string
+              description: 入金先口座番号
+            notes:
+              type: string
+              description: 取引説明
+      -
+        name: DepositTransaction
+        contentType: application/json
+        description: 入金取引
+        schema:
+          allOf:
+          - $ref: "{{model: TransactionAttributes}}"
+          - type: object
+            properties:
+              object:
+                $ref: "{{model: DepositTransactionObject}}"
+      -
+        name: WithdrawTransactionObject
+        contentType: application/json
+        description: 出金取引対象
+        schema:
+          type: object
+          properties:
+            clientUser:
+              $ref: "{{model: ClientUser}}"
+            amount:
+              type: integer
+              description: 金額
+            fromAccountNumber:
+              type: string
+              description: 出金元口座番号
+            notes:
+              type: string
+              description: 取引説明
       -
         name: WithdrawTransaction
         contentType: application/json
+        description: 出金取引
+        schema:
+          allOf:
+          - $ref: "{{model: TransactionAttributes}}"
+          - type: object
+            properties:
+              object:
+                $ref: "{{model: WithdrawTransactionObject}}"
+      -
+        name: TransferTransactionObject
+        contentType: application/json
+        description: 転送取引対象
         schema:
           type: object
           properties:
-            typeOf:
+            clientUser:
+              $ref: "{{model: ClientUser}}"
+            amount:
+              type: integer
+              description: 金額
+            fromAccountNumber:
               type: string
+              description: 転送元口座番号
+            toAccountNumber:
+              type: string
+              description: 転送先口座番号
+            notes:
+              type: string
+              description: 取引説明
       -
         name: TransferTransaction
+        contentType: application/json
+        description: 転送取引
+        schema:
+          allOf:
+          - $ref: "{{model: TransactionAttributes}}"
+          - type: object
+            properties:
+              object:
+                $ref: "{{model: TransferTransactionObject}}"
+      -
+        name: ActionStatusType
+        contentType: application/json
+        definition: アクションステータス
+        schema:
+          type: string
+          enum:
+          - ActiveActionStatus
+          - CompletedActionStatus
+          - FailedActionStatus
+          - PotentialActionStatus
+          - CanceledActionStatus
+      -
+        name: MoneyTransferActionLocation
+        description: 金額保管場所
         contentType: application/json
         schema:
           type: object
@@ -241,8 +426,31 @@ custom:
         schema:
           type: object
           properties:
-            typeOf:
+            id:
               type: string
+              description: アクションID
+            actionStatus:
+              $ref: "{{model: ActionStatusType}}"
+            startDate:
+              type: string
+              format: date-time
+              description: 開始日時
+            endDate:
+              type: string
+              format: date-time
+              description: 終了日時
+            purpose:
+              description: 取引
+              $ref: "{{model: TransactionAttributes}}"
+            amount:
+              type: integer
+              description: 金額
+            fromLocation:
+              description: 転送元
+              $ref: "{{model: MoneyTransferActionLocation}}"
+            toLocation:
+              description: 転送先
+              $ref: "{{model: MoneyTransferActionLocation}}"
       -
         name: MoneyTransferActionList
         contentType: application/json
@@ -250,22 +458,6 @@ custom:
           type: array
           items:
             $ref: "{{model: MoneyTransferAction}}"
-      -
-        name: MoneyTransferActionFromLocation
-        contentType: application/json
-        schema:
-          type: object
-          properties:
-            typeOf:
-              type: string
-      -
-        name: MoneyTransferActionToLocation
-        contentType: application/json
-        schema:
-          type: object
-          properties:
-            typeOf:
-              type: string
 
   commonModelSchemaFragments:
     # defining common fragments means you can reference them with a single line
