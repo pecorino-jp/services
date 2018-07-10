@@ -42,7 +42,7 @@ export class APIError extends Error {
             errors: this.errors.map((error) => {
                 return {
                     ...error,
-                    ...{ message: error.message }
+                    message: error.message
                 };
             }),
             code: this.code,
@@ -71,7 +71,7 @@ export default (err: any) => {
 
     return {
         statusCode: apiError.code,
-        body: JSON.stringify(apiError.toObject())
+        body: JSON.stringify({ error: apiError.toObject() })
     };
 };
 
