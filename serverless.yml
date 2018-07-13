@@ -91,6 +91,9 @@ custom:
       statusCode: 503
       responseModels:
         "application/json": ErrorResponse
+  splitStacks:
+    perFunction: false
+    perType: true
 
 # you can add CloudFormation resource templates here
 # resources:
@@ -106,6 +109,7 @@ custom:
 
 plugins:
   - serverless-aws-documentation
+  - serverless-plugin-split-stacks
 
 functions:
   hello:
@@ -417,81 +421,81 @@ functions:
               - ${self:custom.commonModelSchemaFragments.MethodResponse400}
   authorizerFunc:
     handler: dst/authorizer.handler
-  # abortTasks:
-  #   handler: dst/tasks/abortTasks.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # cancelMoneyTransfer:
-  #   handler: dst/tasks/cancelMoneyTransfer.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # makeTransactionExpired:
-  #   handler: dst/tasks/makeTransactionExpired.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # moneyTransfer:
-  #   handler: dst/tasks/moneyTransfer.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # onCanceledDepositTransaction:
-  #   handler: dst/tasks/onCanceledDepositTransaction.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # onCanceledTransferTransaction:
-  #   handler: dst/tasks/onCanceledTransferTransaction.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # onCanceledWithdrawTransaction:
-  #   handler: dst/tasks/onCanceledWithdrawTransaction.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # onConfirmedDepositTransaction:
-  #   handler: dst/tasks/onConfirmedDepositTransaction.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # onConfirmedTransferTransaction:
-  #   handler: dst/tasks/onConfirmedTransferTransaction.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # onConfirmedWithdrawTransaction:
-  #   handler: dst/tasks/onConfirmedWithdrawTransaction.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # onExpiredDepositTransaction:
-  #   handler: dst/tasks/onExpiredDepositTransaction.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # onExpiredTransferTransaction:
-  #   handler: dst/tasks/onExpiredTransferTransaction.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # onExpiredWithdrawTransaction:
-  #   handler: dst/tasks/onExpiredWithdrawTransaction.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # reexportTransactionTasks:
-  #   handler: dst/tasks/reexportTransactionTasks.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
-  # retryTasks:
-  #   handler: dst/tasks/retryTasks.default
-  #   timeout: 300
-  #   events:
-  #     - schedule: rate(1 minute)
+  abortTasks:
+    handler: dst/tasks/abortTasks.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  cancelMoneyTransfer:
+    handler: dst/tasks/cancelMoneyTransfer.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  makeTransactionExpired:
+    handler: dst/tasks/makeTransactionExpired.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  moneyTransfer:
+    handler: dst/tasks/moneyTransfer.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onCanceledDepositTransaction:
+    handler: dst/tasks/onCanceledDepositTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onCanceledTransferTransaction:
+    handler: dst/tasks/onCanceledTransferTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onCanceledWithdrawTransaction:
+    handler: dst/tasks/onCanceledWithdrawTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onConfirmedDepositTransaction:
+    handler: dst/tasks/onConfirmedDepositTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onConfirmedTransferTransaction:
+    handler: dst/tasks/onConfirmedTransferTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onConfirmedWithdrawTransaction:
+    handler: dst/tasks/onConfirmedWithdrawTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onExpiredDepositTransaction:
+    handler: dst/tasks/onExpiredDepositTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onExpiredTransferTransaction:
+    handler: dst/tasks/onExpiredTransferTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onExpiredWithdrawTransaction:
+    handler: dst/tasks/onExpiredWithdrawTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  reexportTransactionTasks:
+    handler: dst/tasks/reexportTransactionTasks.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  retryTasks:
+    handler: dst/tasks/retryTasks.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events

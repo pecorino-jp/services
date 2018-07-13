@@ -32,9 +32,12 @@
     "@types/jsonwebtoken": "^7.2.7",
     "@types/qs": "^6.5.1",
     "@types/request": "^2.47.1",
+    "bigchaindb-driver": "^4.1.0",
+    "bip39": "^2.5.0",
     "nsp": "^3.2.1",
     "rimraf": "^2.6.2",
     "serverless-aws-documentation": "^1.1.0",
+    "serverless-plugin-split-stacks": "^1.5.5",
     "tslint": "^5.10.0",
     "tslint-microsoft-contrib": "^5.0.3",
     "typescript": "^2.9.2"
