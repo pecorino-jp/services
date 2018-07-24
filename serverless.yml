@@ -108,6 +108,7 @@ custom:
 #       Value: "Some output value"
 
 plugins:
+  - serverless-offline
   - serverless-aws-documentation
   - serverless-plugin-split-stacks
 
