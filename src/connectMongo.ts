@@ -1,7 +1,7 @@
 /**
  * mongooseコネクション確立
  */
-import * as pecorino from '@motionpicture/pecorino-domain';
+import * as pecorino from '@pecorino/domain';
 // import * as createDebug from 'debug';
 
 // const debug = createDebug('pecorino-api:*');

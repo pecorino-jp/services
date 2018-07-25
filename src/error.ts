@@ -1,4 +1,4 @@
-import * as pecorino from '@motionpicture/pecorino-domain';
+import * as pecorino from '@pecorino/domain';
 // tslint:disable-next-line:no-implicit-dependencies
 // import { Callback } from 'aws-lambda';
 import * as createDebug from 'debug';

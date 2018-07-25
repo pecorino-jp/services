@@ -1,4 +1,4 @@
-import * as pecorino from '@motionpicture/pecorino-domain';
+import * as pecorino from '@pecorino/domain';
 // tslint:disable-next-line:no-implicit-dependencies
 import { Context } from 'aws-lambda';
 import { CREATED, NO_CONTENT, OK } from 'http-status';

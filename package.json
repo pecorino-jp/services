@@ -44,7 +44,7 @@
     "typescript": "^2.9.2"
   },
   "dependencies": {
-    "@motionpicture/pecorino-domain": "0.0.1",
+    "@pecorino/domain": "0.0.2",
     "debug": "^3.1.0",
     "http-status": "^1.2.0",
     "jsonwebtoken": "^8.3.0",
