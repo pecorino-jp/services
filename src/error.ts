@@ -1,6 +1,6 @@
 import * as pecorino from '@pecorino/domain';
 // tslint:disable-next-line:no-implicit-dependencies
-// import { Callback } from 'aws-lambda';
+import { APIGatewayProxyResult } from 'aws-lambda';
 import * as createDebug from 'debug';
 import {
     BAD_REQUEST,
@@ -12,6 +12,8 @@ import {
     TOO_MANY_REQUESTS,
     UNAUTHORIZED
 } from 'http-status';
+
+import response from './response';
 
 const debug = createDebug('pecorino:*');
 
@@ -51,7 +53,7 @@ export class APIError extends Error {
     }
 }
 
-export default (err: any) => {
+export default (err: any): APIGatewayProxyResult => {
     debug(err);
 
     let apiError: APIError;
@@ -69,10 +71,7 @@ export default (err: any) => {
         }
     }
 
-    return {
-        statusCode: apiError.code,
-        body: JSON.stringify({ error: apiError.toObject() })
-    };
+    return response(apiError.code, { error: apiError.toObject() });
 };
 
 /**

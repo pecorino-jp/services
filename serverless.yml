@@ -30,6 +30,16 @@ provider:
     COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID_${opt:stage}}
     COGNITO_REGION: ${env:COGNITO_REGION_${opt:stage}}
     DEBUG: ${env:DEBUG_${opt:stage}}
+    STAGE: ${opt:stage}
+    # AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID_${opt:stage}}
+    # AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY_${opt:stage}}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+        - lambda:InvokeAsync
+      Resource: "*"
 
 # you can add statements to the Lambda function's IAM Role here
 #  iamRoleStatements:
@@ -94,6 +104,13 @@ custom:
   splitStacks:
     perFunction: false
     perType: true
+  # simulate:
+  #   dist: dist
+  #   services:
+  #     file: docker-compose.yml
+  #     # will use: $ docker-compose --project-name myproject ... 
+  #     # and:      $ docker --network myproject_default ... 
+  #     projectName: pecorino
 
 # you can add CloudFormation resource templates here
 # resources:
@@ -109,6 +126,7 @@ custom:
 
 plugins:
   - serverless-offline
+  - serverless-offline-scheduler
   - serverless-aws-documentation
   - serverless-plugin-split-stacks
 
@@ -442,6 +460,11 @@ functions:
     timeout: 300
     events:
       - schedule: rate(1 minute)
+  onConfirmedTransaction:
+    handler: dst/tasks/onConfirmedTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
   onCanceledDepositTransaction:
     handler: dst/tasks/onCanceledDepositTransaction.default
     timeout: 300
@@ -454,21 +477,6 @@ functions:
       - schedule: rate(1 minute)
   onCanceledWithdrawTransaction:
     handler: dst/tasks/onCanceledWithdrawTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
-  onConfirmedDepositTransaction:
-    handler: dst/tasks/onConfirmedDepositTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
-  onConfirmedTransferTransaction:
-    handler: dst/tasks/onConfirmedTransferTransaction.default
-    timeout: 300
-    events:
-      - schedule: rate(1 minute)
-  onConfirmedWithdrawTransaction:
-    handler: dst/tasks/onConfirmedWithdrawTransaction.default
     timeout: 300
     events:
       - schedule: rate(1 minute)

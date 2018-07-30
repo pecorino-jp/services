@@ -38,6 +38,7 @@
     "rimraf": "^2.6.2",
     "serverless-aws-documentation": "^1.1.0",
     "serverless-offline": "^3.25.6",
+    "serverless-offline-scheduler": "^0.3.4",
     "serverless-plugin-split-stacks": "^1.5.5",
     "tslint": "^5.10.0",
     "tslint-microsoft-contrib": "^5.0.3",
@@ -45,6 +46,7 @@
   },
   "dependencies": {
     "@pecorino/domain": "0.0.2",
+    "aws-sdk": "^2.281.1",
     "debug": "^3.1.0",
     "http-status": "^1.2.0",
     "jsonwebtoken": "^8.3.0",
