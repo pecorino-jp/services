@@ -46,6 +46,7 @@ export async function start(event: APIGatewayEvent, context: Context): Promise<A
             object: {
                 clientUser: <any>{},
                 amount: parseInt(body.amount, 10),
+                accountType: body.accountType,
                 toAccountNumber: body.toAccountNumber,
                 notes: (body.notes !== undefined) ? body.notes : ''
             },

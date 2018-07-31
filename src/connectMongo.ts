@@ -12,8 +12,8 @@ const connectOptions: pecorino.mongoose.ConnectionOptions = {
     connectTimeoutMS: 30000,
     socketTimeoutMS: 0,
     reconnectTries: 30,
-    reconnectInterval: 1000,
-    useNewUrlParser: true
+    reconnectInterval: 1000
+    // useNewUrlParser: true
 };
 
 export async function connectMongo() {

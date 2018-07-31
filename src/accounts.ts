@@ -25,6 +25,7 @@ export async function search(event: APIGatewayEvent, context: Context): Promise<
         debug('searching accounts...', queryStringParameters);
         const accountRepo = new pecorino.repository.Account(pecorino.mongoose.connection);
         const accounts = await accountRepo.search({
+            accountType: queryStringParameters.accountType,
             accountNumbers: (Array.isArray(queryStringParameters.accountNumbers)) ? queryStringParameters.accountNumbers : [],
             statuses: (Array.isArray(queryStringParameters.statuses)) ? queryStringParameters.statuses : [],
             name: queryStringParameters.name,
@@ -54,6 +55,7 @@ export async function open(event: APIGatewayEvent, context: Context): Promise<AP
         await connectMongo();
 
         const account = await pecorino.service.account.open({
+            accountType: body.accountType,
             accountNumber: body.accountNumber,
             name: body.name,
             initialBalance: (body.initialBalance !== undefined) ? parseInt(body.initialBalance, 10) : 0
@@ -76,7 +78,10 @@ export async function close(event: APIGatewayEvent, context: Context): Promise<A
             throw new pecorino.factory.errors.Argument('pathParameters', 'pathParameters is null');
         }
 
-        await pecorino.service.account.close({ accountNumber: event.pathParameters.accountNumber })({
+        await pecorino.service.account.close({
+            accountType: event.pathParameters.accountType,
+            accountNumber: event.pathParameters.accountNumber
+        })({
             account: new pecorino.repository.Account(pecorino.mongoose.connection)
         });
 
@@ -97,6 +102,7 @@ export async function searchMoneyTransferActions(event: APIGatewayEvent, context
 
         const actionRepo = new pecorino.repository.Action(pecorino.mongoose.connection);
         const actions = await actionRepo.searchTransferActions({
+            accountType: event.pathParameters.accountType,
             accountNumber: event.pathParameters.accountNumber
         });
 

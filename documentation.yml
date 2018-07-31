@@ -73,6 +73,9 @@
       schema:
         type: object
         properties:
+          # accountType:
+          #   type: string
+          #   description: 口座タイプ
           accountNumber:
             type: string
             description: 口座番号
@@ -193,6 +196,9 @@
           amount:
             type: integer
             description: 金額
+          # accountType:
+          #   type: string
+          #   description: 口座タイプ
           notes:
             type: string
             description: 取引説明
