@@ -24,14 +24,17 @@ export async function search(event: APIGatewayEvent, context: Context): Promise<
 
         debug('searching accounts...', queryStringParameters);
         const accountRepo = new pecorino.repository.Account(pecorino.mongoose.connection);
-        const accounts = await accountRepo.search({
+        const searchConditions: pecorino.factory.account.ISearchConditions<pecorino.factory.account.AccountType> = {
+            // tslint:disable-next-line:no-magic-numbers
+            limit: (queryStringParameters.limit !== undefined) ? Math.min(queryStringParameters.limit, 100) : 100,
+            page: (queryStringParameters.page !== undefined) ? Math.max(queryStringParameters.page, 1) : 1,
+            sort: (queryStringParameters.sort !== undefined) ? queryStringParameters.sort : { accountNumber: 1 },
             accountType: queryStringParameters.accountType,
             accountNumbers: (Array.isArray(queryStringParameters.accountNumbers)) ? queryStringParameters.accountNumbers : [],
             statuses: (Array.isArray(queryStringParameters.statuses)) ? queryStringParameters.statuses : [],
-            name: queryStringParameters.name,
-            // tslint:disable-next-line:no-magic-numbers
-            limit: (queryStringParameters.limit !== undefined) ? parseInt(queryStringParameters.limit, 10) : 100
-        });
+            name: queryStringParameters.name
+        };
+        const accounts = await accountRepo.search(searchConditions);
 
         return response(OK, accounts);
     } catch (error) {
@@ -95,16 +98,22 @@ export async function searchMoneyTransferActions(event: APIGatewayEvent, context
     debug('event handled.', event);
     try {
         context.callbackWaitsForEmptyEventLoop = false;
+        const queryStringParameters = qs.parse(qs.stringify(event.queryStringParameters));
         await connectMongo();
         if (event.pathParameters === null) {
             throw new pecorino.factory.errors.Argument('pathParameters', 'pathParameters is null');
         }
 
         const actionRepo = new pecorino.repository.Action(pecorino.mongoose.connection);
-        const actions = await actionRepo.searchTransferActions({
+        const searchConditions: pecorino.factory.action.transfer.moneyTransfer.ISearchConditions<pecorino.factory.account.AccountType> = {
+            // tslint:disable-next-line:no-magic-numbers
+            limit: (queryStringParameters.limit !== undefined) ? Math.min(queryStringParameters.limit, 100) : 100,
+            page: (queryStringParameters.page !== undefined) ? Math.max(queryStringParameters.page, 1) : 1,
+            sort: (queryStringParameters.sort !== undefined) ? queryStringParameters.sort : { endDate: -1 },
             accountType: event.pathParameters.accountType,
             accountNumber: event.pathParameters.accountNumber
-        });
+        };
+        const actions = await actionRepo.searchTransferActions(searchConditions);
 
         return response(OK, actions);
     } catch (error) {
