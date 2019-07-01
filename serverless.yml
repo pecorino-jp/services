@@ -1,0 +1,542 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: pecorino # NOTE: update this with your service name
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${opt:stage}
+  region: ap-northeast-1
+  timeout: 10 # optional, in seconds, default is 6
+
+# you can define service wide environment variables here
+  environment:
+    MONGOLAB_URI: ${env:MONGOLAB_URI_${opt:stage}}
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID_${opt:stage}}
+    COGNITO_REGION: ${env:COGNITO_REGION_${opt:stage}}
+    DEBUG: ${env:DEBUG_${opt:stage}}
+    STAGE: ${opt:stage}
+    # AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID_${opt:stage}}
+    # AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY_${opt:stage}}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+        - lambda:InvokeAsync
+      Resource: "*"
+
+# you can add statements to the Lambda function's IAM Role here
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:ListBucket"
+#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:PutObject"
+#      Resource:
+#        Fn::Join:
+#          - ""
+#          - - "arn:aws:s3:::"
+#            - "Ref" : "ServerlessDeploymentBucket"
+#            - "/*"
+
+# you can add packaging information here
+#package:
+#  include:
+#    - include-me.js
+#    - include-me-dir/**
+#  exclude:
+#    - exclude-me.js
+#    - exclude-me-dir/**
+
+custom:
+  adminUserAuth:
+    name: authorizerFunc
+    resultTtlInSeconds: 0
+    identitySource: method.request.header.Authorization
+    # identityValidationExpression: someRegex
+    type: token
+  # You must have the documentation object
+  documentation: ${file(./documentation.yml)}
+  commonModelSchemaFragments:
+    # defining common fragments means you can reference them with a single line
+    MethodResponse400:
+      statusCode: 400
+      responseModels:
+        "application/json": ErrorResponse
+    MethodResponse403:
+      statusCode: 403
+      responseModels:
+        "application/json": ErrorResponse
+    MethodResponse404:
+      statusCode: 404
+      responseModels:
+        "application/json": ErrorResponse
+    MethodResponse409:
+      statusCode: 409
+      responseModels:
+        "application/json": ErrorResponse
+    MethodResponse500:
+      statusCode: 500
+      responseModels:
+        "application/json": ErrorResponse
+    MethodResponse503:
+      statusCode: 503
+      responseModels:
+        "application/json": ErrorResponse
+  splitStacks:
+    perFunction: false
+    perType: true
+  # simulate:
+  #   dist: dist
+  #   services:
+  #     file: docker-compose.yml
+  #     # will use: $ docker-compose --project-name myproject ... 
+  #     # and:      $ docker --network myproject_default ... 
+  #     projectName: pecorino
+
+# you can add CloudFormation resource templates here
+# resources:
+#   Resources:
+#    NewResource:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: my-new-bucket
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
+
+plugins:
+  - serverless-offline
+  - serverless-offline-scheduler
+  - serverless-aws-documentation
+  - serverless-plugin-split-stacks
+
+functions:
+  hello:
+    handler: dst/handler.hello
+    events:
+      - http:
+          path: ""
+          method: get
+          documentation:
+            summary: hello
+            description: hello
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": HelloResponse
+  searchAccounts:
+    handler: dst/accounts.search
+    events:
+      - http:
+          path: accounts
+          method: get
+          authorizer: ${self:custom.adminUserAuth}
+          request:
+            parameters:
+              querystrings:
+                accountNumbers: false
+                statuses: false
+                name: false
+                limit: true
+          documentation:
+            summary: 口座検索
+            description: 口座検索
+            tags:
+              - 口座管理サービス
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": AccountList
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  openAccount:
+    handler: dst/accounts.open
+    events:
+      - http:
+          path: accounts
+          method: post
+          authorizer: ${self:custom.adminUserAuth}
+          documentation:
+            summary: 口座開設
+            description: 口座開設
+            tags:
+              - 口座管理サービス
+            requestBody:
+              description: 口座番号と口座名義を指定します。Pecorinoサービス内(ひとつのPecorinoAPIエンドポイント)でユニークとなるように指定側で管理すること。 重複すればステータスコード409が返されます。
+            requestModels:
+               "application/json": OpenAccountParams
+            methodResponses:
+              -
+                statusCode: 201
+                responseModels:
+                  "application/json": Account
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  closeAccount:
+    handler: dst/accounts.close
+    events:
+      - http:
+          path: accounts/{accountType}/{accountNumber}/close
+          method: put
+          authorizer: ${self:custom.adminUserAuth}
+          request:
+            parameters:
+              paths:
+                accountType: true
+                accountNumber: true
+          documentation:
+            summary: 口座解約
+            description: 口座解約
+            tags:
+              - 口座管理サービス
+            methodResponses:
+              -
+                statusCode: 204
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  searchAccountMoneyTransferActions:
+    handler: dst/accounts.searchMoneyTransferActions
+    events:
+      - http:
+          path: accounts/{accountType}/{accountNumber}/actions/moneyTransfer
+          method: get
+          authorizer: ${self:custom.adminUserAuth}
+          request:
+            parameters:
+              paths:
+                accountType: true
+                accountNumber: true
+          documentation:
+            summary: 口座取引履歴検索
+            description: 口座取引履歴検索
+            tags:
+              - 口座管理サービス
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": MoneyTransferActionList
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  searchActions:
+    handler: dst/actions.search
+    events:
+      - http:
+          path: actions
+          method: get
+          authorizer: ${self:custom.adminUserAuth}
+          documentation:
+            summary: アクション検索
+            description: アクションタイプを指定してアクションを検索します。
+            tags:
+              - アクション管理サービス
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": ActionList
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  startDepositTransaction:
+    handler: dst/transactions/deposit.start
+    events:
+      - http:
+          path: transactions/deposit/start
+          method: post
+          authorizer: ${self:custom.adminUserAuth}
+          documentation:
+            summary: 入金取引開始
+            description: 取引を開始します。取引の期限が切れると取引を確定することはできなくなります。 アプリケーション側で十分な期間を想定し、期限をセットしてください。
+            tags:
+              - 入金取引サービス
+            requestBody:
+              description: 入金取引開始パラメーター
+            requestModels:
+               "application/json": StartDepositTransactionParams
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": DepositTransaction
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  confirmDepositTransaction:
+    handler: dst/transactions/deposit.confirm
+    events:
+      - http:
+          path: transactions/deposit/{transactionId}/confirm
+          method: put
+          authorizer: ${self:custom.adminUserAuth}
+          request:
+            parameters:
+              paths:
+                transactionId: true
+          documentation:
+            summary: 入金取引確定
+            description: 取引を確定します。有効期限を超過していた場合、ステータスコード400を返却します。
+            tags:
+              - 入金取引サービス
+            methodResponses:
+              -
+                statusCode: 204
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  cancelDepositTransaction:
+    handler: dst/transactions/deposit.cancel
+    events:
+      - http:
+          path: transactions/deposit/{transactionId}/cancel
+          method: put
+          authorizer: ${self:custom.adminUserAuth}
+          request:
+            parameters:
+              paths:
+                transactionId: true
+          documentation:
+            summary: 入金取引中止
+            description: 取引を中止します。すでに確定済の場合、ステータスコード400を返却します。
+            tags:
+              - 入金取引サービス
+            methodResponses:
+              -
+                statusCode: 204
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  startTransferTransaction:
+    handler: dst/transactions/transfer.start
+    events:
+      - http:
+          path: transactions/transfer/start
+          method: post
+          authorizer: ${self:custom.adminUserAuth}
+          documentation:
+            summary: 転送取引開始
+            description: 取引を開始します。取引の期限が切れると取引を確定することはできなくなります。 アプリケーション側で十分な期間を想定し、期限をセットしてください。
+            tags:
+              - 転送取引サービス
+            requestBody:
+              description: 転送取引開始パラメーター
+            requestModels:
+               "application/json": StartTransferTransactionParams
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": TransferTransaction
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  confirmTransferTransaction:
+    handler: dst/transactions/transfer.confirm
+    events:
+      - http:
+          path: transactions/transfer/{transactionId}/confirm
+          method: put
+          authorizer: ${self:custom.adminUserAuth}
+          request:
+            parameters:
+              paths:
+                transactionId: true
+          documentation:
+            summary: 転送取引確定
+            description: 取引を確定します。有効期限を超過していた場合、ステータスコード400を返却します。
+            tags:
+              - 転送取引サービス
+            methodResponses:
+              -
+                statusCode: 204
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  cancelTransferTransaction:
+    handler: dst/transactions/transfer.cancel
+    events:
+      - http:
+          path: transactions/transfer/{transactionId}/cancel
+          method: put
+          authorizer: ${self:custom.adminUserAuth}
+          request:
+            parameters:
+              paths:
+                transactionId: true
+          documentation:
+            summary: 転送取引中止
+            description: 取引を中止します。すでに確定済の場合、ステータスコード400を返却します。
+            tags:
+              - 転送取引サービス
+            methodResponses:
+              -
+                statusCode: 204
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  startWithdrawTransaction:
+    handler: dst/transactions/withdraw.start
+    events:
+      - http:
+          path: transactions/withdraw/start
+          method: post
+          authorizer: ${self:custom.adminUserAuth}
+          documentation:
+            summary: 出金取引開始
+            description: 取引を開始します。取引の期限が切れると取引を確定することはできなくなります。 アプリケーション側で十分な期間を想定し、期限をセットしてください。
+            tags:
+              - 出金取引サービス
+            requestBody:
+              description: 出金取引開始パラメーター
+            requestModels:
+               "application/json": StartWithdrawTransactionParams
+            methodResponses:
+              -
+                statusCode: 200
+                responseModels:
+                  "application/json": WithdrawTransaction
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  confirmWithdrawTransaction:
+    handler: dst/transactions/withdraw.confirm
+    events:
+      - http:
+          path: transactions/withdraw/{transactionId}/confirm
+          method: put
+          authorizer: ${self:custom.adminUserAuth}
+          request:
+            parameters:
+              paths:
+                transactionId: true
+          documentation:
+            summary: 出金取引確定
+            description: 取引を確定します。有効期限を超過していた場合、ステータスコード400を返却します。
+            tags:
+              - 出金取引サービス
+            methodResponses:
+              -
+                statusCode: 204
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  cancelWithdrawTransaction:
+    handler: dst/transactions/withdraw.cancel
+    events:
+      - http:
+          path: transactions/withdraw/{transactionId}/cancel
+          method: put
+          authorizer: ${self:custom.adminUserAuth}
+          request:
+            parameters:
+              paths:
+                transactionId: true
+          documentation:
+            summary: 出金取引中止
+            description: 取引を中止します。すでに確定済の場合、ステータスコード400を返却します。
+            tags:
+              - 出金取引サービス
+            methodResponses:
+              -
+                statusCode: 204
+              - ${self:custom.commonModelSchemaFragments.MethodResponse400}
+  authorizerFunc:
+    handler: dst/authorizer.handler
+  abortTasks:
+    handler: dst/tasks/abortTasks.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  cancelMoneyTransfer:
+    handler: dst/tasks/cancelMoneyTransfer.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  makeTransactionExpired:
+    handler: dst/tasks/makeTransactionExpired.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  moneyTransfer:
+    handler: dst/tasks/moneyTransfer.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onConfirmedTransaction:
+    handler: dst/tasks/onConfirmedTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onCanceledDepositTransaction:
+    handler: dst/tasks/onCanceledDepositTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onCanceledTransferTransaction:
+    handler: dst/tasks/onCanceledTransferTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onCanceledWithdrawTransaction:
+    handler: dst/tasks/onCanceledWithdrawTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onExpiredDepositTransaction:
+    handler: dst/tasks/onExpiredDepositTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onExpiredTransferTransaction:
+    handler: dst/tasks/onExpiredTransferTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  onExpiredWithdrawTransaction:
+    handler: dst/tasks/onExpiredWithdrawTransaction.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  reexportTransactionTasks:
+    handler: dst/tasks/reexportTransactionTasks.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+  retryTasks:
+    handler: dst/tasks/retryTasks.default
+    timeout: 300
+    events:
+      - schedule: rate(1 minute)
+
+#    The following are a few example events you can configure
+#    NOTE: Please make sure to change your handler code to work with those events
+#    Check the event documentation for details
+#    events:
+#      - http:
+#          path: users/create
+#          method: get
+#      - s3: ${env:BUCKET}
+#      - schedule: rate(10 minutes)
+#      - sns: greeter-topic
+#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
+#      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
+#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
+#      - iot:
+#          sql: "SELECT * FROM 'some_topic'"
+#      - cloudwatchEvent:
+#          event:
+#            source:
+#              - "aws.ec2"
+#            detail-type:
+#              - "EC2 Instance State-change Notification"
+#            detail:
+#              state:
+#                - pending
+#      - cloudwatchLog: '/aws/lambda/hello'
+#      - cognitoUserPool:
+#          pool: MyUserPool
+#          trigger: PreSignUp
+
+#    Define function environment variables here
+#    environment:
+#      variable2: value2
